@@ -1,1 +1,2 @@
-# ducttape-action
+Install Ducttape action
+=======================

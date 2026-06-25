@@ -1,0 +1,38 @@
+name: "Ducttape VM installer"
+description: "Create VMs from container descriptions"
+author: "Gerard Braad <me@gbraad.nl>"
+inputs:
+  version:
+    description: 'Version of ducttape to download'
+    required: false
+    default: '0.8'
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Ducttape executor
+      id: setup
+      shell: bash
+      run: |
+        VERSION="${{ inputs.version }}"
+        DOWNLOAD_BASEURL="https://github.com/ducttape-infra/ducttape/releases/download/v${VERSION}"
+
+        arch=$(uname -m)
+        if [[ "$arch" == "x86_64" ]]; then
+          DOWNLOAD_URL="${DOWNLOAD_BASEURL}/ducttape-linux-amd64"
+        elif [[ "$arch" == "aarch64" ]]; then
+          echo ":Currently not supported"
+          #DOWNLOAD_URL="${DOWNLOAD_BASEURL}/ducttape-linux-arm64"
+        else
+          echo "::error::Unsupported architecture: $arch. Only x86_64 and aarch64 are supported."
+          exit 1
+        fi
+
+        echo "Downloading ducttape executor from $DOWNLOAD_URL"
+        mkdir -p /tmp/ducttape-install
+        curl -sSL $DOWNLOAD_URL -o /tmp/ducttape-install/ducttape
+        chmod +x /tmp/ducttape-install/ducttape
+        sudo mv /tmp/ducttape-install/ducttape /usr/sbin/ducttape
+        rm -rf /tmp/ducttape-install
+        BINARY_PATH="/usr/sbin/ducttape"
+
+        echo "DUCTTAPE=$BINARY_PATH" >> $GITHUB_ENV
